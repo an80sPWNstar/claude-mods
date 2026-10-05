@@ -12,7 +12,7 @@ import {
   freshTotal,
   dotsOwed,
   stepEaten,
-  liveFrame,
+  boardFrame,
   scoreLine,
 } from './tally'
 import type { Totals, LocalJob, Run, Tone } from './tally'
@@ -131,11 +131,12 @@ export const register: Register = on => {
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
     const fresh = freshTotal(totals)
+    const cols = e.props.bodyColumns
     const lines: Run[][] = [
       scoreLine(fresh),
-      liveFrame(eaten, dotsOwed(fresh)),
+      boardFrame(eaten, dotsOwed(fresh), cols),
       [],
-      ...paneLines(totals, jobs),
+      ...paneLines(totals, jobs, cols < 54),
     ]
     return (
       <Box flexDirection="column">

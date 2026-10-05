@@ -171,10 +171,14 @@ export function shortModel(id: string): string {
 }
 
 // Lines for the pane. Each line is a list of runs; an empty array is a blank line.
-export function paneLines(t: Totals, jobs: LocalJob[]): Run[][] {
+// compact narrows the table: NAME 10 / COL 7 / names sliced to 10, instead of 14 / 8 / 13.
+export function paneLines(t: Totals, jobs: LocalJob[], compact = false): Run[][] {
+  const NAME = compact ? 10 : 14
+  const COL = compact ? 7 : 8
+  const SLICE = compact ? 10 : 13
   const lines: Run[][] = []
   lines.push([
-    { text: 'Claude'.padEnd(14) + ['req', 'in', 'write', 'read', 'out'].map(s => s.padStart(8)).join(''), tone: 'head' },
+    { text: 'Claude'.padEnd(NAME) + ['req', 'in', 'write', 'read', 'out'].map(s => s.padStart(COL)).join(''), tone: 'head' },
   ])
   const models = Object.entries(t.byModel)
   if (models.length === 0) {
@@ -185,21 +189,21 @@ export function paneLines(t: Totals, jobs: LocalJob[]): Run[][] {
       .sort((a, b) => b.total - a.total)
     for (const { m, r } of sorted) {
       lines.push([
-        { text: shortModel(m).slice(0, 13).padEnd(14), tone: 'name' },
+        { text: shortModel(m).slice(0, SLICE).padEnd(NAME), tone: 'name' },
         {
           text:
-            String(r.requests).padStart(8) +
-            formatCount(r.input).padStart(8) +
-            formatCount(r.cacheWrite).padStart(8),
+            String(r.requests).padStart(COL) +
+            formatCount(r.input).padStart(COL) +
+            formatCount(r.cacheWrite).padStart(COL),
           tone: 'plain',
         },
-        { text: formatCount(r.cacheRead).padStart(8), tone: 'dim' },
-        { text: formatCount(r.output).padStart(8), tone: 'plain' },
+        { text: formatCount(r.cacheRead).padStart(COL), tone: 'dim' },
+        { text: formatCount(r.output).padStart(COL), tone: 'plain' },
       ])
     }
   }
   lines.push([])
-  lines.push([{ text: 'Local'.padEnd(14) + 'jobs'.padStart(8) + 'total'.padStart(8), tone: 'head' }])
+  lines.push([{ text: 'Local'.padEnd(NAME) + 'jobs'.padStart(COL) + 'total'.padStart(COL), tone: 'head' }])
   const boxes: Record<string, { count: number; sum: number }> = {}
   for (const j of jobs) {
     const b = boxes[j.box] ?? { count: 0, sum: 0 }
@@ -214,8 +218,8 @@ export function paneLines(t: Totals, jobs: LocalJob[]): Run[][] {
     const sorted = boxEntries.sort((a, b) => b[1].sum - a[1].sum)
     for (const [box, b] of sorted) {
       lines.push([
-        { text: box.slice(0, 13).padEnd(14), tone: 'name' },
-        { text: String(b.count).padStart(8) + formatCount(b.sum).padStart(8), tone: 'plain' },
+        { text: box.slice(0, SLICE).padEnd(NAME), tone: 'name' },
+        { text: String(b.count).padStart(COL) + formatCount(b.sum).padStart(COL), tone: 'plain' },
       ])
     }
   }
@@ -289,6 +293,23 @@ export function liveFrame(eaten: number, owed: number): Run[] {
     { text: ' '.repeat(pos), tone: 'plain' },
     { text: mouth, tone: 'amber' },
     { text: '\u00B7'.repeat(ahead), tone: 'dim' },
+  ]
+}
+
+// The board: a row of dots the eater walks along, refilled each time it wraps.
+// w = Math.max(10, Math.min(TRACK, width)); pos = eaten % w.
+// mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
+// Returns exactly three runs:
+// [{ text: ' '.repeat(pos), tone: 'plain' }, { text: mouth, tone: 'amber' }, { text: '·'.repeat(w - 1 - pos), tone: 'dim' }]
+// ('·' is U+00B7)
+export function boardFrame(eaten: number, owed: number, width: number): Run[] {
+  const w = Math.max(10, Math.min(TRACK, width))
+  const pos = eaten % w
+  const mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
+  return [
+    { text: ' '.repeat(pos), tone: 'plain' },
+    { text: mouth, tone: 'amber' },
+    { text: '\u00B7'.repeat(w - 1 - pos), tone: 'dim' },
   ]
 }
 
