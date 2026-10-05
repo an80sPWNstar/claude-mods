@@ -1,1 +1,9 @@
-{ "name": "token-meter", "version": "0.1.0", "description": "Session token meter (Claude vs local LLM) on the status line, /tokens breakdown, and a Haiku-first subagent guard." }
+{
+  "name": "token-meter",
+  "version": "1.0.0",
+  "description": "This session's token use, Claude vs local LLMs: status line, live spinner count, and a /tokens pane with a Pac-Man context-window maze. Plus a Haiku-first subagent guard.",
+  "author": { "name": "Bryan Henson", "url": "https://github.com/an80sPWNstar" },
+  "homepage": "https://github.com/an80sPWNstar/claude-mods",
+  "repository": "https://github.com/an80sPWNstar/claude-mods",
+  "license": "MIT"
+}

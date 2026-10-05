@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-mods",
+  "description": "Claude Mods by an80sPWNstar: small Claude Code mods built from function hooks.",
+  "owner": { "name": "Bryan Henson", "url": "https://github.com/an80sPWNstar" },
+  "plugins": [
+    {
+      "name": "token-meter",
+      "source": "./token-meter",
+      "description": "This session's token use, Claude vs local LLMs: status line, live spinner count, and a /tokens pane with a Pac-Man context-window maze. Plus a Haiku-first subagent guard.",
+      "category": "productivity",
+      "tags": ["mods", "function-hooks", "tokens", "usage", "local-llm", "pacman"]
+    }
+  ]
+}
