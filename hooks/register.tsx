@@ -66,6 +66,7 @@ function toneProps(tone: Tone) {
   if (tone === 'amber') return { color: '#e8a33d' }
   if (tone === 'green') return { color: '#6bcb77' }
   if (tone === 'pellet') return { color: '#ffb8ae' }
+  if (tone === 'pac') return { color: '#ffff00', bold: true }
   return {}
 }
 

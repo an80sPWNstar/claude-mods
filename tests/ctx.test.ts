@@ -40,7 +40,7 @@ test('ctxMaze basic', () => {
   const m0 = ctxMaze(0, 0, 0)
   expect(m0).toHaveLength(10)
   expect(m0[0]).toEqual([
-    { text: " C", tone: "amber" },
+    { text: " C", tone: "pac" },
     { text: " •".repeat(19), tone: "pellet" }
   ])
   expect(m0[1]).toEqual([{ text: " •".repeat(20), tone: "pellet" }])
@@ -51,7 +51,7 @@ test('ctxMaze partial', () => {
   const m3 = ctxMaze(3, 0, 0)
   expect(m3[0]).toEqual([
     { text: "  ".repeat(3), tone: "plain" },
-    { text: " C", tone: "amber" },
+    { text: " C", tone: "pac" },
     { text: " •".repeat(16), tone: "pellet" }
   ])
 })
@@ -61,7 +61,7 @@ test('ctxMaze full row', () => {
   expect(m25[0]).toEqual([{ text: "  ".repeat(20), tone: "plain" }])
   expect(m25[1]).toEqual([
     { text: " •".repeat(14), tone: "pellet" },
-    { text: " Ɔ", tone: "amber" },
+    { text: " Ɔ", tone: "pac" },
     { text: "  ".repeat(5), tone: "plain" }
   ])
   expect(m25[2]).toEqual([{ text: " •".repeat(20), tone: "pellet" }])
@@ -71,19 +71,19 @@ test('ctxMaze moving mouth', () => {
   const m25_10_12 = ctxMaze(25, 10, 12)
   expect(m25_10_12[1]).toEqual([
     { text: " •".repeat(14), tone: "pellet" },
-    { text: " O", tone: "amber" },
+    { text: " O", tone: "pac" },
     { text: "  ".repeat(5), tone: "plain" }
   ])
   
   const m25_11_12 = ctxMaze(25, 11, 12)
-  expect(m25_11_12[1]?.[1]).toEqual({ text: " Ɔ", tone: "amber" })
+  expect(m25_11_12[1]?.[1]).toEqual({ text: " Ɔ", tone: "pac" })
 })
 
 test('ctxMaze full', () => {
   const mf = ctxMaze(200, 0, 0)
   expect(mf[0]).toEqual([{ text: "  ".repeat(20), tone: "plain" }])
   expect(mf[9]).toEqual([
-    { text: " Ɔ", tone: "amber" },
+    { text: " Ɔ", tone: "pac" },
     { text: "  ".repeat(19), tone: "plain" }
   ])
   

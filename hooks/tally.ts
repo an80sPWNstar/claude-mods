@@ -45,7 +45,7 @@ export function stepToward(shown: number, target: number): number {
 // s = Math.max(0, Math.min(CTX_DOTS, shown)); p = Math.min(s, CTX_DOTS - 1)  (the eater's cell)
 // moving = owed > eaten
 // For row r (0..ROWS-1) and column j (0..ROW-1): idx = r * ROW + (r % 2 === 0 ? j : ROW - 1 - j)
-//   idx === p -> { text: ' ' + mouth, tone: 'amber' }
+//   idx === p -> { text: ' ' + mouth, tone: 'pac' }
 //                mouth = moving && eaten % 2 === 0 ? 'O' : (r % 2 === 0 ? 'C' : 'Ɔ')   ('Ɔ' is U+0186)
 //   idx < s   -> { text: '  ', tone: 'plain' }
 //   otherwise -> { text: ' •', tone: 'pellet' }   ('•' is U+2022)
@@ -62,7 +62,7 @@ export function ctxMaze(shown: number, eaten: number, owed: number): Run[][] {
       let run: Run
       if (idx === p) {
         const mouth = moving && eaten % 2 === 0 ? 'O' : (r % 2 === 0 ? 'C' : '\u0186')
-        run = { text: ' ' + mouth, tone: 'amber' }
+        run = { text: ' ' + mouth, tone: 'pac' }
       } else if (idx < s) {
         run = { text: '  ', tone: 'plain' }
       } else {
@@ -183,7 +183,7 @@ export function spawnDecision(s: SpawnInfo, confirmed: ReadonlySet<string>): Spa
   }
 }
 
-export type Tone = 'head' | 'name' | 'dim' | 'amber' | 'green' | 'plain' | 'pellet'
+export type Tone = 'head' | 'name' | 'dim' | 'amber' | 'green' | 'plain' | 'pellet' | 'pac'
 export type Run = { text: string; tone: Tone }
 
 // Drop a leading "claude-" and a trailing "-YYYYMMDD" (8 digits).
