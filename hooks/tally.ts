@@ -297,3 +297,19 @@ export function liveFrame(eaten: number, owed: number): Run[] {
 export function liveLabel(fresh: number): string {
   return '1 dot = 1k fresh tokens \u00B7 ' + formatCount(fresh) + ' this session'
 }
+
+// Arcade score line. The number is fresh with commas every three digits,
+// built WITHOUT toLocaleString/Intl (the runtime may lack them):
+//   String(fresh).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+// Returns exactly three runs:
+// [{ text: 'SCORE ', tone: 'head' },
+//  { text: <grouped number>, tone: 'amber' },
+//  { text: '   1 dot = 1k fresh tokens', tone: 'dim' }]
+export function scoreLine(fresh: number): Run[] {
+  const grouped = String(fresh).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return [
+    { text: 'SCORE ', tone: 'head' },
+    { text: grouped, tone: 'amber' },
+    { text: '   1 dot = 1k fresh tokens', tone: 'dim' },
+  ]
+}

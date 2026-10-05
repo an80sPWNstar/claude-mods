@@ -13,7 +13,7 @@ import {
   dotsOwed,
   stepEaten,
   liveFrame,
-  liveLabel,
+  scoreLine,
 } from './tally'
 import type { Totals, LocalJob, Run, Tone } from './tally'
 
@@ -132,8 +132,8 @@ export const register: Register = on => {
     const { Box, Text } = $.ui.resolve(e)
     const fresh = freshTotal(totals)
     const lines: Run[][] = [
+      scoreLine(fresh),
       liveFrame(eaten, dotsOwed(fresh)),
-      [{ text: liveLabel(fresh), tone: 'dim' }],
       [],
       ...paneLines(totals, jobs),
     ]
@@ -143,7 +143,7 @@ export const register: Register = on => {
           line.length === 0 ? (
             <Text> </Text>
           ) : (
-            <Text wrap="truncate-end">
+            <Text wrap="wrap">
               {line.map((r: Run) => (
                 <Text {...toneProps(r.tone)}>{r.text}</Text>
               ))}
@@ -157,7 +157,7 @@ export const register: Register = on => {
   on('command.run', { command: 'tokens' }, async $ => {
     await scanLocal($)
     show($)
-    await $.ui.open({ id: PANE, title: 'Tokens · this session' })
+    await $.ui.open({ id: PANE, title: 'Tokens · this session', columns: 56 })
     return { text: 'Opened the tokens pane.' }
   })
 }
