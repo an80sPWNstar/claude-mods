@@ -12,7 +12,11 @@ import {
   freshTotal,
   dotsOwed,
   stepEaten,
-  boardFrame,
+  contextSize,
+  ctxTarget,
+  stepToward,
+  ctxBoard,
+  ctxLabel,
   scoreLine,
 } from './tally'
 import type { Totals, LocalJob, Run, Tone } from './tally'
@@ -26,6 +30,8 @@ const PANE = 'token-meter'
 let mainTurnId = ''
 let turnBase = 0
 let eaten = 0
+let ctx = 0
+let shown = 0
 
 async function save($: EngineInterface) {
   await $.store.set('totals:' + sid, totals)
@@ -77,6 +83,9 @@ export const register: Register = on => {
       totals = saved as Totals
     }
     eaten = dotsOwed(freshTotal(totals))
+    const savedCtx = await $.store.get('ctx:' + sid)
+    if (typeof savedCtx === 'number') ctx = savedCtx
+    shown = ctxTarget(ctx)
     await $.command.register({ name: 'tokens', description: 'Token use this session: Claude per model, local per box' })
     await scanLocal($)
     show($)
@@ -86,10 +95,17 @@ export const register: Register = on => {
     })
     $.clock.every(120, () => {
       const owed = dotsOwed(freshTotal(totals))
+      const target = ctxTarget(ctx)
+      let changed = false
       if (eaten < owed) {
         eaten = stepEaten(eaten, owed)
-        $.ui.invalidate('ui.render')
+        changed = true
       }
+      if (shown !== target) {
+        shown = stepToward(shown, target)
+        changed = true
+      }
+      if (changed) $.ui.invalidate('ui.render')
     })
     return next(e)
   })
@@ -102,6 +118,10 @@ export const register: Register = on => {
     const r = yield* next(e)
     if (r && r.usage) {
       totals = addUsage(totals, r.usage)
+      if (e.agentId === undefined) {
+        ctx = contextSize(r.usage)
+        await $.store.set('ctx:' + sid, ctx)
+      }
       show($)
       await save($)
     }
@@ -133,8 +153,9 @@ export const register: Register = on => {
     const fresh = freshTotal(totals)
     const cols = e.props.bodyColumns
     const lines: Run[][] = [
-      scoreLine(fresh),
-      boardFrame(eaten, dotsOwed(fresh), cols),
+      scoreLine(fresh).slice(0, 2),
+      ctxBoard(shown, eaten, dotsOwed(fresh)),
+      [{ text: ctxLabel(ctx), tone: 'dim' }],
       [],
       ...paneLines(totals, jobs, cols < 54),
     ]

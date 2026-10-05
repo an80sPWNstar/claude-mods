@@ -18,6 +18,46 @@ function num(v: unknown): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : 0
 }
 
+export const CTX_WINDOW = 1000000 // context window in tokens
+export const CTX_DOT = 50000      // context tokens per dot
+export const CTX_DOTS = 20        // CTX_WINDOW / CTX_DOT
+
+// The context one step's request carried: input + cache read + cache write.
+export function contextSize(u: Usage): number {
+  return num(u.input_tokens) + num(u.cache_read_input_tokens) + num(u.cache_creation_input_tokens)
+}
+
+// Dots eaten for a context size: Math.min(CTX_DOTS, Math.floor(ctx / CTX_DOT)).
+export function ctxTarget(ctx: number): number {
+  return Math.min(CTX_DOTS, Math.floor(ctx / CTX_DOT))
+}
+
+// One animation step of the eater's position: shown < target ? shown + 1 : target
+// (moving up walks one dot at a time; a drop, e.g. after compaction, jumps straight there).
+export function stepToward(shown: number, target: number): number {
+  return shown < target ? shown + 1 : target
+}
+
+// The board. s = Math.max(0, Math.min(CTX_DOTS, shown)).
+// mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
+// Returns exactly three runs:
+// [{ text: '  '.repeat(s), tone: 'plain' }, { text: mouth, tone: 'amber' }, { text: ' ·'.repeat(CTX_DOTS - s), tone: 'dim' }]
+// ('·' is U+00B7; each dot cell is two characters: a space then the dot)
+export function ctxBoard(shown: number, eaten: number, owed: number): Run[] {
+  const s = Math.max(0, Math.min(CTX_DOTS, shown))
+  const mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
+  return [
+    { text: '  '.repeat(s), tone: 'plain' },
+    { text: mouth, tone: 'amber' },
+    { text: ' ·'.repeat(CTX_DOTS - s), tone: 'dim' },
+  ]
+}
+
+// Label under the board: '1 dot = 50k context · ' + formatCount(ctx) + ' of 1M'  (middle dot U+00B7)
+export function ctxLabel(ctx: number): string {
+  return '1 dot = 50k context \u00B7 ' + formatCount(ctx) + ' of 1M'
+}
+
 export function emptyTotals(): Totals {
   return { byModel: {} }
 }
