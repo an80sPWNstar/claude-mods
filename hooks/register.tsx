@@ -153,7 +153,7 @@ export const register: Register = on => {
     const fresh = freshTotal(totals)
     const cols = e.props.bodyColumns
     const lines: Run[][] = [
-      scoreLine(fresh).slice(0, 2),
+      scoreLine(fresh),
       ctxBoard(shown, eaten, dotsOwed(fresh)),
       [{ text: ctxLabel(ctx), tone: 'dim' }],
       [],

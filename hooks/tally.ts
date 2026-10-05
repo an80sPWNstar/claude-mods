@@ -159,45 +159,6 @@ export function spawnDecision(s: SpawnInfo, confirmed: ReadonlySet<string>): Spa
   }
 }
 
-export function breakdownText(t: Totals, jobs: LocalJob[]): string {
-  const lines: string[] = []
-  lines.push('Claude')
-  const models = Object.entries(t.byModel)
-  if (models.length === 0) {
-    lines.push('  (none yet)')
-  } else {
-    const sorted = models
-      .map(([m, r]) => ({ m, r, total: r.input + r.output + r.cacheRead + r.cacheWrite }))
-      .sort((a, b) => b.total - a.total)
-    for (const { m, r } of sorted) {
-      lines.push(
-        `${m}  req ${r.requests}  in ${formatCount(r.input)}  write ${formatCount(r.cacheWrite)}  read ${formatCount(r.cacheRead)}  out ${formatCount(r.output)}`,
-      )
-    }
-  }
-  lines.push('Local')
-  const boxes: Record<string, { count: number; sum: number }> = {}
-  for (const j of jobs) {
-    const b = boxes[j.box] ?? { count: 0, sum: 0 }
-    b.count += 1
-    b.sum += j.prompt + j.completion
-    boxes[j.box] = b
-  }
-  const boxEntries = Object.entries(boxes)
-  if (boxEntries.length === 0) {
-    lines.push('  (none yet)')
-  } else {
-    const sorted = boxEntries.sort((a, b) => b[1].sum - a[1].sum)
-    for (const [box, b] of sorted) {
-      lines.push(`${box}  jobs ${b.count}  ${formatCount(b.sum)}`)
-    }
-  }
-  const c = claudeTotal(t)
-  const l = localTotal(jobs)
-  lines.push(`Total  Claude ${formatCount(c.all)} · Local ${formatCount(l.all)}`)
-  return lines.join('\n')
-}
-
 export type Tone = 'head' | 'name' | 'dim' | 'amber' | 'green' | 'plain'
 export type Run = { text: string; tone: Tone }
 
@@ -280,22 +241,6 @@ export function spinnerSuffix(n: number): string {
   return '\u2026 \u00B7 Claude +' + formatCount(n) + ' this turn'
 }
 
-// One dot per 100k Claude tokens.
-export function dotsFor(all: number): number {
-  return Math.max(1, Math.min(40, Math.ceil(all / 100000)))
-}
-
-// One frame of the pac-man animation.
-export function pacFrame(frame: number, dots: number): Run[] {
-  const p = Math.min(frame, dots)
-  const mouth = frame >= dots ? 'C' : frame % 2 === 0 ? 'C' : 'O'
-  return [
-    { text: ' '.repeat(p), tone: 'plain' },
-    { text: mouth, tone: 'amber' },
-    { text: '\u00B7'.repeat(dots - p), tone: 'dim' },
-  ]
-}
-
 export const TRACK = 40 // track width in cells
 export const DOT = 1000 // fresh tokens per dot
 
@@ -319,58 +264,15 @@ export function stepEaten(eaten: number, owed: number): number {
   return Math.max(eaten, owed - TRACK) + 1
 }
 
-// One frame of the live track. pos = eaten % TRACK.
-// ahead = Math.max(0, Math.min(owed - eaten, TRACK - 1 - pos)).
-// mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
-// Returns exactly three runs:
-// [{ text: ' '.repeat(pos), tone: 'plain' }, { text: mouth, tone: 'amber' }, { text: '·'.repeat(ahead), tone: 'dim' }]
-// ('·' is U+00B7)
-export function liveFrame(eaten: number, owed: number): Run[] {
-  const pos = eaten % TRACK
-  const ahead = Math.max(0, Math.min(owed - eaten, TRACK - 1 - pos))
-  const mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
-  return [
-    { text: ' '.repeat(pos), tone: 'plain' },
-    { text: mouth, tone: 'amber' },
-    { text: '\u00B7'.repeat(ahead), tone: 'dim' },
-  ]
-}
-
-// The board: a row of dots the eater walks along, refilled each time it wraps.
-// w = Math.max(10, Math.min(TRACK, width)); pos = eaten % w.
-// mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
-// Returns exactly three runs:
-// [{ text: ' '.repeat(pos), tone: 'plain' }, { text: mouth, tone: 'amber' }, { text: '·'.repeat(w - 1 - pos), tone: 'dim' }]
-// ('·' is U+00B7)
-export function boardFrame(eaten: number, owed: number, width: number): Run[] {
-  const w = Math.max(10, Math.min(TRACK, width))
-  const pos = eaten % w
-  const mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
-  return [
-    { text: ' '.repeat(pos), tone: 'plain' },
-    { text: mouth, tone: 'amber' },
-    { text: '\u00B7'.repeat(w - 1 - pos), tone: 'dim' },
-  ]
-}
-
-// Label under the track: '1 dot = 1k fresh tokens · ' + formatCount(fresh) + ' this session'
-// (the middle dot is U+00B7)
-export function liveLabel(fresh: number): string {
-  return '1 dot = 1k fresh tokens \u00B7 ' + formatCount(fresh) + ' this session'
-}
-
 // Arcade score line. The number is fresh with commas every three digits,
 // built WITHOUT toLocaleString/Intl (the runtime may lack them):
 //   String(fresh).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-// Returns exactly three runs:
-// [{ text: 'SCORE ', tone: 'head' },
-//  { text: <grouped number>, tone: 'amber' },
-//  { text: '   1 dot = 1k fresh tokens', tone: 'dim' }]
+// Returns exactly two runs:
+// [{ text: 'SCORE ', tone: 'head' }, { text: <grouped number>, tone: 'amber' }]
 export function scoreLine(fresh: number): Run[] {
   const grouped = String(fresh).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   return [
     { text: 'SCORE ', tone: 'head' },
     { text: grouped, tone: 'amber' },
-    { text: '   1 dot = 1k fresh tokens', tone: 'dim' },
   ]
 }
