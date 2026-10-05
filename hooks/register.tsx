@@ -15,7 +15,7 @@ import {
   contextSize,
   ctxTarget,
   stepToward,
-  ctxBoard,
+  ctxMaze,
   ctxLabel,
   scoreLine,
 } from './tally'
@@ -65,6 +65,7 @@ function toneProps(tone: Tone) {
   if (tone === 'dim') return { dimColor: true }
   if (tone === 'amber') return { color: '#e8a33d' }
   if (tone === 'green') return { color: '#6bcb77' }
+  if (tone === 'pellet') return { color: '#ffb8ae' }
   return {}
 }
 
@@ -154,7 +155,7 @@ export const register: Register = on => {
     const cols = e.props.bodyColumns
     const lines: Run[][] = [
       scoreLine(fresh),
-      ctxBoard(shown, eaten, dotsOwed(fresh)),
+      ...ctxMaze(shown, eaten, dotsOwed(fresh)),
       [{ text: ctxLabel(ctx), tone: 'dim' }],
       [],
       ...paneLines(totals, jobs, cols < 54),

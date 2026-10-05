@@ -19,8 +19,10 @@ function num(v: unknown): number {
 }
 
 export const CTX_WINDOW = 1000000 // context window in tokens
-export const CTX_DOT = 50000      // context tokens per dot
-export const CTX_DOTS = 20        // CTX_WINDOW / CTX_DOT
+export const CTX_DOT = 5000       // context tokens per dot
+export const CTX_DOTS = 200       // CTX_WINDOW / CTX_DOT
+export const ROW = 20   // dots per maze row
+export const ROWS = 10  // CTX_DOTS / ROW
 
 // The context one step's request carried: input + cache read + cache write.
 export function contextSize(u: Usage): number {
@@ -38,24 +40,46 @@ export function stepToward(shown: number, target: number): number {
   return shown < target ? shown + 1 : target
 }
 
-// The board. s = Math.max(0, Math.min(CTX_DOTS, shown)).
-// mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
-// Returns exactly three runs:
-// [{ text: '  '.repeat(s), tone: 'plain' }, { text: mouth, tone: 'amber' }, { text: ' ·'.repeat(CTX_DOTS - s), tone: 'dim' }]
-// ('·' is U+00B7; each dot cell is two characters: a space then the dot)
-export function ctxBoard(shown: number, eaten: number, owed: number): Run[] {
+// The maze: ROWS lines of ROW cells, two characters per cell, walked as a snake
+// (even rows left to right, odd rows right to left).
+// s = Math.max(0, Math.min(CTX_DOTS, shown)); p = Math.min(s, CTX_DOTS - 1)  (the eater's cell)
+// moving = owed > eaten
+// For row r (0..ROWS-1) and column j (0..ROW-1): idx = r * ROW + (r % 2 === 0 ? j : ROW - 1 - j)
+//   idx === p -> { text: ' ' + mouth, tone: 'amber' }
+//                mouth = moving && eaten % 2 === 0 ? 'O' : (r % 2 === 0 ? 'C' : 'Ɔ')   ('Ɔ' is U+0186)
+//   idx < s   -> { text: '  ', tone: 'plain' }
+//   otherwise -> { text: ' •', tone: 'pellet' }   ('•' is U+2022)
+// Each line is its cells left to right, with ADJACENT RUNS OF THE SAME TONE MERGED into one run (texts concatenated).
+export function ctxMaze(shown: number, eaten: number, owed: number): Run[][] {
   const s = Math.max(0, Math.min(CTX_DOTS, shown))
-  const mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
-  return [
-    { text: '  '.repeat(s), tone: 'plain' },
-    { text: mouth, tone: 'amber' },
-    { text: ' ·'.repeat(CTX_DOTS - s), tone: 'dim' },
-  ]
+  const p = Math.min(s, CTX_DOTS - 1)
+  const moving = owed > eaten
+  const rows: Run[][] = []
+  for (let r = 0; r < ROWS; r++) {
+    const cells: Run[] = []
+    for (let j = 0; j < ROW; j++) {
+      const idx = r * ROW + (r % 2 === 0 ? j : ROW - 1 - j)
+      let run: Run
+      if (idx === p) {
+        const mouth = moving && eaten % 2 === 0 ? 'O' : (r % 2 === 0 ? 'C' : '\u0186')
+        run = { text: ' ' + mouth, tone: 'amber' }
+      } else if (idx < s) {
+        run = { text: '  ', tone: 'plain' }
+      } else {
+        run = { text: ' \u2022', tone: 'pellet' }
+      }
+      const last = cells[cells.length - 1]
+      if (last !== undefined && last.tone === run.tone) last.text += run.text
+      else cells.push(run)
+    }
+    rows.push(cells)
+  }
+  return rows
 }
 
-// Label under the board: '1 dot = 50k context · ' + formatCount(ctx) + ' of 1M'  (middle dot U+00B7)
+// Label under the maze: '1 dot = 5k context · ' + formatCount(ctx) + ' of 1M'  (middle dot U+00B7)
 export function ctxLabel(ctx: number): string {
-  return '1 dot = 50k context \u00B7 ' + formatCount(ctx) + ' of 1M'
+  return '1 dot = 5k context \u00B7 ' + formatCount(ctx) + ' of 1M'
 }
 
 export function emptyTotals(): Totals {
@@ -159,7 +183,7 @@ export function spawnDecision(s: SpawnInfo, confirmed: ReadonlySet<string>): Spa
   }
 }
 
-export type Tone = 'head' | 'name' | 'dim' | 'amber' | 'green' | 'plain'
+export type Tone = 'head' | 'name' | 'dim' | 'amber' | 'green' | 'plain' | 'pellet'
 export type Run = { text: string; tone: Tone }
 
 // Drop a leading "claude-" and a trailing "-YYYYMMDD" (8 digits).
