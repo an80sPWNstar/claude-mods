@@ -1,5 +1,5 @@
 import { test, expect } from 'claude-code/testing'
-import { emptyTotals, addUsage, TRACK, DOT, freshTotal, dotsOwed, stepEaten, liveFrame, liveLabel } from '../hooks/tally'
+import { emptyTotals, addUsage, TRACK, DOT, freshTotal, dotsOwed, stepEaten } from '../hooks/tally'
 
 test('TRACK and DOT constants', () => {
   expect(TRACK).toBe(40)
@@ -42,45 +42,4 @@ test('stepEaten', () => {
   expect(stepEaten(0, 3)).toBe(1)
   expect(stepEaten(0, 100)).toBe(61)
   expect(stepEaten(10, 45)).toBe(11)
-})
-
-test('liveFrame', () => {
-  expect(liveFrame(5, 5)).toEqual([
-    { text: '     ', tone: 'plain' },
-    { text: 'C', tone: 'amber' },
-    { text: '', tone: 'dim' },
-  ])
-
-  expect(liveFrame(0, 3)).toEqual([
-    { text: '', tone: 'plain' },
-    { text: 'O', tone: 'amber' },
-    { text: '···', tone: 'dim' },
-  ])
-
-  expect(liveFrame(1, 3)).toEqual([
-    { text: ' ', tone: 'plain' },
-    { text: 'C', tone: 'amber' },
-    { text: '··', tone: 'dim' },
-  ])
-
-  const f38 = liveFrame(38, 50)
-  expect(f38[0]?.text).toBe(' '.repeat(38))
-  expect(f38[0]?.tone).toBe('plain')
-  expect(f38[1]?.text).toBe('O')
-  expect(f38[1]?.tone).toBe('amber')
-  expect(f38[2]?.text).toBe('·')
-  expect(f38[2]?.tone).toBe('dim')
-
-  const f41 = liveFrame(41, 42)
-  expect(f41[0]?.text).toBe(' ')
-  expect(f41[0]?.tone).toBe('plain')
-  expect(f41[1]?.text).toBe('C')
-  expect(f41[1]?.tone).toBe('amber')
-  expect(f41[2]?.text).toBe('·')
-  expect(f41[2]?.tone).toBe('dim')
-})
-
-test('liveLabel', () => {
-  expect(liveLabel(0)).toBe('1 dot = 1k fresh tokens · 0 this session')
-  expect(liveLabel(175600)).toBe('1 dot = 1k fresh tokens · 175.6k this session')
 })

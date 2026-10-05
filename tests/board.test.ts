@@ -1,49 +1,5 @@
 import { test, expect } from 'claude-code/testing'
-import { emptyTotals, addUsage, boardFrame, paneLines } from '../hooks/tally'
-
-test('boardFrame(0, 0, 40)', () => {
-  expect(boardFrame(0, 0, 40)).toEqual([
-    { text: "", tone: "plain" },
-    { text: "C", tone: "amber" },
-    { text: "·".repeat(39), tone: "dim" },
-  ])
-})
-
-test('boardFrame(0, 3, 40)', () => {
-  expect(boardFrame(0, 3, 40)).toEqual([
-    { text: "", tone: "plain" },
-    { text: "O", tone: "amber" },
-    { text: "·".repeat(39), tone: "dim" },
-  ])
-})
-
-test('boardFrame(5, 5, 12)', () => {
-  expect(boardFrame(5, 5, 12)).toEqual([
-    { text: " ".repeat(5), tone: "plain" },
-    { text: "C", tone: "amber" },
-    { text: "·".repeat(6), tone: "dim" },
-  ])
-})
-
-test('boardFrame(41, 50, 40)', () => {
-  expect(boardFrame(41, 50, 40)).toEqual([
-    { text: " ", tone: "plain" },
-    { text: "C", tone: "amber" },
-    { text: "·".repeat(38), tone: "dim" },
-  ])
-})
-
-test('boardFrame(3, 3, 4) clamps width up to 10', () => {
-  expect(boardFrame(3, 3, 4)).toEqual([
-    { text: "   ", tone: "plain" },
-    { text: "C", tone: "amber" },
-    { text: "·".repeat(6), tone: "dim" },
-  ])
-})
-
-test('boardFrame(0, 0, 100) clamps width down to 40', () => {
-  expect(boardFrame(0, 0, 100)[2]?.text).toBe("·".repeat(39))
-})
+import { emptyTotals, addUsage, paneLines } from '../hooks/tally'
 
 test('paneLines compact', () => {
   const t = addUsage(emptyTotals(), {

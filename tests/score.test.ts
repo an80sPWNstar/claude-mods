@@ -5,7 +5,6 @@ test('scoreLine(0) returns the three runs with "0"', () => {
   expect(scoreLine(0)).toEqual([
     { text: 'SCORE ', tone: 'head' },
     { text: '0', tone: 'amber' },
-    { text: '   1 dot = 1k fresh tokens', tone: 'dim' },
   ])
 })
 
@@ -13,7 +12,6 @@ test('scoreLine(191800) groups the number as "191,800"', () => {
   expect(scoreLine(191800)).toEqual([
     { text: 'SCORE ', tone: 'head' },
     { text: '191,800', tone: 'amber' },
-    { text: '   1 dot = 1k fresh tokens', tone: 'dim' },
   ])
 })
 

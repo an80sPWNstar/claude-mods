@@ -1,5 +1,5 @@
 import { test, expect } from 'claude-code/testing'
-import { emptyTotals, addUsage, claudeTotal, parseJob, localTotal, formatCount, statusLine, spawnDecision, breakdownText } from '../hooks/tally'
+import { emptyTotals, addUsage, claudeTotal, parseJob, localTotal, formatCount, statusLine, spawnDecision } from '../hooks/tally'
 
 test('formatCount', () => {
   expect(formatCount(0)).toBe('0')
@@ -92,25 +92,4 @@ test('spawnDecision deny for fork', () => {
 
 test('spawnDecision pass for teammate', () => {
   expect(spawnDecision({ fork: false, model: 'opus', subagentType: 'general-purpose', description: 'd', isTeammate: true }, new Set())).toEqual({ action: 'pass' })
-})
-
-test('breakdownText empty', () => {
-  expect(breakdownText(emptyTotals(), [])).toContain('(none yet)')
-})
-
-test('breakdownText with data', () => {
-  const t = emptyTotals()
-  const a = addUsage(t, { model: 'm1', input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 2, cache_creation_input_tokens: 1 })
-  const b = addUsage(a, { model: 'm1', input_tokens: 20, output_tokens: 7, cache_read_input_tokens: 3, cache_creation_input_tokens: 2 })
-  const c = addUsage(b, { model: 'm2', input_tokens: 100, output_tokens: 50, cache_read_input_tokens: 10, cache_creation_input_tokens: 5 })
-  const jobs = [
-    { id: 'job_a', box: 'rtx:8081', model: 'Qwen3.8-27B-Q4_K_M', prompt: 7875, completion: 2993, done: true },
-    { id: 'job_b', box: 'tesla', model: 'Qwen3.6-35B-A3B-Q8_0', prompt: 1000, completion: 500, done: true },
-  ]
-  const text = breakdownText(c, jobs)
-  expect(text).toContain('m1')
-  expect(text).toContain('m2')
-  expect(text).toContain('rtx:8081')
-  expect(text).toContain('tesla')
-  expect(text).toContain('Total')
 })

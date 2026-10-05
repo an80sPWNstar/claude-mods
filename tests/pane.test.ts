@@ -5,8 +5,6 @@ import {
   shortModel,
   paneLines,
   spinnerSuffix,
-  dotsFor,
-  pacFrame,
 } from '../hooks/tally'
 
 test('shortModel drops claude- prefix and trailing date', () => {
@@ -64,30 +62,4 @@ test('paneLines with one model and one local job', () => {
   ])
   expect(lines[6]?.[1]?.text).toBe('Claude 2.39M')
   expect(lines[6]?.[3]?.text).toBe('Local 41.7k')
-})
-
-test('dotsFor clamps to 1..40 at 100k per dot', () => {
-  expect(dotsFor(0)).toBe(1)
-  expect(dotsFor(100000)).toBe(1)
-  expect(dotsFor(100001)).toBe(2)
-  expect(dotsFor(2385600)).toBe(24)
-  expect(dotsFor(9000000)).toBe(40)
-})
-
-test('pacFrame renders the mouth and remaining dots', () => {
-  expect(pacFrame(0, 3)).toEqual([
-    { text: '', tone: 'plain' },
-    { text: 'C', tone: 'amber' },
-    { text: '\u00B7\u00B7\u00B7', tone: 'dim' },
-  ])
-  expect(pacFrame(1, 3)).toEqual([
-    { text: ' ', tone: 'plain' },
-    { text: 'O', tone: 'amber' },
-    { text: '\u00B7\u00B7', tone: 'dim' },
-  ])
-  expect(pacFrame(5, 3)).toEqual([
-    { text: '   ', tone: 'plain' },
-    { text: 'C', tone: 'amber' },
-    { text: '', tone: 'dim' },
-  ])
 })
