@@ -9,8 +9,11 @@ import {
   spawnDecision,
   paneLines,
   spinnerSuffix,
-  dotsFor,
-  pacFrame,
+  freshTotal,
+  dotsOwed,
+  stepEaten,
+  liveFrame,
+  liveLabel,
 } from './tally'
 import type { Totals, LocalJob, Run, Tone } from './tally'
 
@@ -22,8 +25,7 @@ let jobsDir = ''
 const PANE = 'token-meter'
 let mainTurnId = ''
 let turnBase = 0
-let frame = 1000
-let anim: { cancel: () => void } | null = null
+let eaten = 0
 
 async function save($: EngineInterface) {
   await $.store.set('totals:' + sid, totals)
@@ -74,12 +76,20 @@ export const register: Register = on => {
     ) {
       totals = saved as Totals
     }
+    eaten = dotsOwed(freshTotal(totals))
     await $.command.register({ name: 'tokens', description: 'Token use this session: Claude per model, local per box' })
     await scanLocal($)
     show($)
     $.clock.every(20000, async () => {
       await scanLocal($)
       show($)
+    })
+    $.clock.every(120, () => {
+      const owed = dotsOwed(freshTotal(totals))
+      if (eaten < owed) {
+        eaten = stepEaten(eaten, owed)
+        $.ui.invalidate('ui.render')
+      }
     })
     return next(e)
   })
@@ -120,10 +130,10 @@ export const register: Register = on => {
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
     const { Box, Text } = $.ui.resolve(e)
-    const d = dotsFor(claudeTotal(totals).all)
+    const fresh = freshTotal(totals)
     const lines: Run[][] = [
-      pacFrame(frame, d),
-      [{ text: 'each dot = 100k Claude tokens', tone: 'dim' }],
+      liveFrame(eaten, dotsOwed(fresh)),
+      [{ text: liveLabel(fresh), tone: 'dim' }],
       [],
       ...paneLines(totals, jobs),
     ]
@@ -148,16 +158,6 @@ export const register: Register = on => {
     await scanLocal($)
     show($)
     await $.ui.open({ id: PANE, title: 'Tokens · this session' })
-    frame = 0
-    if (anim) anim.cancel()
-    anim = $.clock.every(120, () => {
-      frame += 1
-      $.ui.invalidate('ui.render')
-      if (frame >= dotsFor(claudeTotal(totals).all) && anim) {
-        anim.cancel()
-        anim = null
-      }
-    })
     return { text: 'Opened the tokens pane.' }
   })
 }

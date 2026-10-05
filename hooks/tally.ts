@@ -251,3 +251,49 @@ export function pacFrame(frame: number, dots: number): Run[] {
     { text: '\u00B7'.repeat(dots - p), tone: 'dim' },
   ]
 }
+
+export const TRACK = 40 // track width in cells
+export const DOT = 1000 // fresh tokens per dot
+
+// Fresh tokens: input + output + cacheWrite over all models (cache reads NOT counted).
+// Equals claudeTotal(t).all - claudeTotal(t).cached.
+export function freshTotal(t: Totals): number {
+  const c = claudeTotal(t)
+  return c.all - c.cached
+}
+
+// Dots earned so far: Math.floor(fresh / DOT).
+export function dotsOwed(fresh: number): number {
+  return Math.floor(fresh / DOT)
+}
+
+// One tick of the eater. If eaten >= owed, return eaten unchanged.
+// Otherwise skip any backlog beyond TRACK, then eat one:
+//   return Math.max(eaten, owed - TRACK) + 1
+export function stepEaten(eaten: number, owed: number): number {
+  if (eaten >= owed) return eaten
+  return Math.max(eaten, owed - TRACK) + 1
+}
+
+// One frame of the live track. pos = eaten % TRACK.
+// ahead = Math.max(0, Math.min(owed - eaten, TRACK - 1 - pos)).
+// mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
+// Returns exactly three runs:
+// [{ text: ' '.repeat(pos), tone: 'plain' }, { text: mouth, tone: 'amber' }, { text: '·'.repeat(ahead), tone: 'dim' }]
+// ('·' is U+00B7)
+export function liveFrame(eaten: number, owed: number): Run[] {
+  const pos = eaten % TRACK
+  const ahead = Math.max(0, Math.min(owed - eaten, TRACK - 1 - pos))
+  const mouth = owed > eaten ? (eaten % 2 === 0 ? 'O' : 'C') : 'C'
+  return [
+    { text: ' '.repeat(pos), tone: 'plain' },
+    { text: mouth, tone: 'amber' },
+    { text: '\u00B7'.repeat(ahead), tone: 'dim' },
+  ]
+}
+
+// Label under the track: '1 dot = 1k fresh tokens · ' + formatCount(fresh) + ' this session'
+// (the middle dot is U+00B7)
+export function liveLabel(fresh: number): string {
+  return '1 dot = 1k fresh tokens \u00B7 ' + formatCount(fresh) + ' this session'
+}
