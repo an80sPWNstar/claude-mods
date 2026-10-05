@@ -1,0 +1,1 @@
+{ "name": "token-meter", "version": "0.1.0", "description": "Session token meter (Claude vs local LLM) on the status line, /tokens breakdown, and a Haiku-first subagent guard." }
