@@ -1,4 +1,4 @@
-import type { Register } from 'claude-code'
+import type { Register, EngineInterface } from 'claude-code'
 import { emptyTotals, addUsage, claudeTotal, parseJob, localTotal, statusLine, spawnDecision, breakdownText } from './tally'
 import type { Totals, LocalJob } from './tally'
 
@@ -8,11 +8,11 @@ let confirmed = new Set<string>()
 let sid = ''
 let jobsDir = ''
 
-async function save($: Register) {
+async function save($: EngineInterface) {
   await $.store.set('totals:' + sid, totals)
 }
 
-async function scanLocal($: Register) {
+async function scanLocal($: EngineInterface) {
   if (jobsDir === '' || !(await $.fs.exists(jobsDir))) return
   try {
     const entries = await $.fs.list(jobsDir)
@@ -30,60 +30,62 @@ async function scanLocal($: Register) {
   }
 }
 
-function show($: Register) {
+function show($: EngineInterface) {
   $.ui.status(statusLine(claudeTotal(totals), localTotal(jobs)))
 }
 
-on('session.start', async ($, e, next) => {
-  sid = await $.session.id()
-  const home = (await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? ''
-  jobsDir = home ? home.replace(/\\/g, '/') + '/.lanllm/jobs/' + sid : ''
-  const saved = await $.store.get('totals:' + sid)
-  if (
-    typeof saved === 'object' &&
-    saved !== null &&
-    typeof (saved as { byModel?: unknown }).byModel === 'object' &&
-    (saved as { byModel?: unknown }).byModel !== null
-  ) {
-    totals = saved as Totals
-  }
-  await $.command.register({ name: 'tokens', description: 'Token use this session: Claude per model, local per box' })
-  await scanLocal($)
-  show($)
-  $.clock.every(20000, async () => {
+export const register: Register = on => {
+  on('session.start', async ($, e, next) => {
+    sid = await $.session.id()
+    const home = (await $.env.get('USERPROFILE')) ?? (await $.env.get('HOME')) ?? ''
+    jobsDir = home ? home.replace(/\\/g, '/') + '/.lanllm/jobs/' + sid : ''
+    const saved = await $.store.get('totals:' + sid)
+    if (
+      typeof saved === 'object' &&
+      saved !== null &&
+      typeof (saved as { byModel?: unknown }).byModel === 'object' &&
+      (saved as { byModel?: unknown }).byModel !== null
+    ) {
+      totals = saved as Totals
+    }
+    await $.command.register({ name: 'tokens', description: 'Token use this session: Claude per model, local per box' })
     await scanLocal($)
     show($)
+    $.clock.every(20000, async () => {
+      await scanLocal($)
+      show($)
+    })
+    return next(e)
   })
-  return next(e)
-})
 
-on('turn.step', async function* ($, e, next) {
-  const r = yield* next(e)
-  if (r && r.usage) {
-    totals = addUsage(totals, r.usage)
+  on('turn.step', async function* ($, e, next) {
+    const r = yield* next(e)
+    if (r && r.usage) {
+      totals = addUsage(totals, r.usage)
+      show($)
+      await save($)
+    }
+    return r
+  })
+
+  on('agent.spawn', async ($, e, next) => {
+    const info = {
+      fork: e.fork,
+      model: e.model,
+      subagentType: e.subagentType,
+      description: e.description,
+      isTeammate: e.isTeammate,
+    }
+    const d = spawnDecision(info, confirmed)
+    if (d.action === 'pass') return next(e)
+    if (d.action === 'rewrite') return next({ ...e, model: 'haiku' })
+    confirmed.add(d.key)
+    return { deny: d.reason }
+  })
+
+  on('command.run', { command: 'tokens' }, async ($) => {
+    await scanLocal($)
     show($)
-    await save($)
-  }
-  return r
-})
-
-on('agent.spawn', async ($, e, next) => {
-  const info = {
-    fork: e.fork,
-    model: e.model,
-    subagentType: e.subagentType,
-    description: e.description,
-    isTeammate: e.isTeammate,
-  }
-  const d = spawnDecision(info, confirmed)
-  if (d.action === 'pass') return next(e)
-  if (d.action === 'rewrite') return next({ ...e, model: 'haiku' })
-  confirmed.add(d.key)
-  return { deny: d.reason }
-})
-
-on('command.run', { command: 'tokens' }, async ($) => {
-  await scanLocal($)
-  show($)
-  return { text: breakdownText(totals, jobs) }
-})
+    return { text: breakdownText(totals, jobs) }
+  })
+}
