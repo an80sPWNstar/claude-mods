@@ -157,3 +157,97 @@ export function breakdownText(t: Totals, jobs: LocalJob[]): string {
   lines.push(`Total  Claude ${formatCount(c.all)} · Local ${formatCount(l.all)}`)
   return lines.join('\n')
 }
+
+export type Tone = 'head' | 'name' | 'dim' | 'amber' | 'green' | 'plain'
+export type Run = { text: string; tone: Tone }
+
+// Drop a leading "claude-" and a trailing "-YYYYMMDD" (8 digits).
+// "claude-opus-5-5" -> "opus-5-5"; "claude-haiku-4-5-20251001" -> "haiku-4-5"; "qwen" -> "qwen".
+export function shortModel(id: string): string {
+  let s = id
+  if (s.startsWith('claude-')) s = s.slice('claude-'.length)
+  s = s.replace(/-\d{8}$/, '')
+  return s
+}
+
+// Lines for the pane. Each line is a list of runs; an empty array is a blank line.
+export function paneLines(t: Totals, jobs: LocalJob[]): Run[][] {
+  const lines: Run[][] = []
+  lines.push([
+    { text: 'Claude'.padEnd(14) + ['req', 'in', 'write', 'read', 'out'].map(s => s.padStart(8)).join(''), tone: 'head' },
+  ])
+  const models = Object.entries(t.byModel)
+  if (models.length === 0) {
+    lines.push([{ text: '  (none yet)', tone: 'dim' }])
+  } else {
+    const sorted = models
+      .map(([m, r]) => ({ m, r, total: r.input + r.output + r.cacheRead + r.cacheWrite }))
+      .sort((a, b) => b.total - a.total)
+    for (const { m, r } of sorted) {
+      lines.push([
+        { text: shortModel(m).slice(0, 13).padEnd(14), tone: 'name' },
+        {
+          text:
+            String(r.requests).padStart(8) +
+            formatCount(r.input).padStart(8) +
+            formatCount(r.cacheWrite).padStart(8),
+          tone: 'plain',
+        },
+        { text: formatCount(r.cacheRead).padStart(8), tone: 'dim' },
+        { text: formatCount(r.output).padStart(8), tone: 'plain' },
+      ])
+    }
+  }
+  lines.push([])
+  lines.push([{ text: 'Local'.padEnd(14) + 'jobs'.padStart(8) + 'total'.padStart(8), tone: 'head' }])
+  const boxes: Record<string, { count: number; sum: number }> = {}
+  for (const j of jobs) {
+    const b = boxes[j.box] ?? { count: 0, sum: 0 }
+    b.count += 1
+    b.sum += j.prompt + j.completion
+    boxes[j.box] = b
+  }
+  const boxEntries = Object.entries(boxes)
+  if (boxEntries.length === 0) {
+    lines.push([{ text: '  (none yet)', tone: 'dim' }])
+  } else {
+    const sorted = boxEntries.sort((a, b) => b[1].sum - a[1].sum)
+    for (const [box, b] of sorted) {
+      lines.push([
+        { text: box.slice(0, 13).padEnd(14), tone: 'name' },
+        { text: String(b.count).padStart(8) + formatCount(b.sum).padStart(8), tone: 'plain' },
+      ])
+    }
+  }
+  lines.push([])
+  const claude = claudeTotal(t)
+  const local = localTotal(jobs)
+  lines.push([
+    { text: 'Total   ', tone: 'plain' },
+    { text: 'Claude ' + formatCount(claude.all), tone: 'amber' },
+    { text: ' \u00B7 ', tone: 'plain' },
+    { text: 'Local ' + formatCount(local.all), tone: 'green' },
+  ])
+  return lines
+}
+
+// Spinner suffix: '… · Claude +' + formatCount(n) + ' this turn'
+export function spinnerSuffix(n: number): string {
+  return '\u2026 \u00B7 Claude +' + formatCount(n) + ' this turn'
+}
+
+// One dot per 100k Claude tokens.
+export function dotsFor(all: number): number {
+  return Math.max(1, Math.min(40, Math.ceil(all / 100000)))
+}
+
+// One frame of the pac-man animation.
+export function pacFrame(frame: number, dots: number): Run[] {
+  const p = Math.min(frame, dots)
+  const mouth = frame >= dots ? 'C' : frame % 2 === 0 ? 'C' : 'O'
+  return [
+    { text: ' '.repeat(p), tone: 'plain' },
+    { text: mouth, tone: 'amber' },
+    { text: '\u00B7'.repeat(dots - p), tone: 'dim' },
+  ]
+}

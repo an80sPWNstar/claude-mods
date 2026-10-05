@@ -62,8 +62,8 @@ test('paneLines with one model and one local job', () => {
     { text: 'rtx           ', tone: 'name' },
     { text: '       1   41.7k', tone: 'plain' },
   ])
-  expect(lines[6][1].text).toBe('Claude 2.39M')
-  expect(lines[6][3].text).toBe('Local 41.7k')
+  expect(lines[6]?.[1]?.text).toBe('Claude 2.39M')
+  expect(lines[6]?.[3]?.text).toBe('Local 41.7k')
 })
 
 test('dotsFor clamps to 1..40 at 100k per dot', () => {

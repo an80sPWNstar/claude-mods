@@ -1,12 +1,29 @@
 import type { Register, EngineInterface } from 'claude-code'
-import { emptyTotals, addUsage, claudeTotal, parseJob, localTotal, statusLine, spawnDecision, breakdownText } from './tally'
-import type { Totals, LocalJob } from './tally'
+import {
+  emptyTotals,
+  addUsage,
+  claudeTotal,
+  parseJob,
+  localTotal,
+  statusLine,
+  spawnDecision,
+  paneLines,
+  spinnerSuffix,
+  dotsFor,
+  pacFrame,
+} from './tally'
+import type { Totals, LocalJob, Run, Tone } from './tally'
 
 let totals: Totals = emptyTotals()
 let jobs: LocalJob[] = []
 let confirmed = new Set<string>()
 let sid = ''
 let jobsDir = ''
+const PANE = 'token-meter'
+let mainTurnId = ''
+let turnBase = 0
+let frame = 1000
+let anim: { cancel: () => void } | null = null
 
 async function save($: EngineInterface) {
   await $.store.set('totals:' + sid, totals)
@@ -32,6 +49,15 @@ async function scanLocal($: EngineInterface) {
 
 function show($: EngineInterface) {
   $.ui.status(statusLine(claudeTotal(totals), localTotal(jobs)))
+  $.ui.invalidate('ui.render')
+}
+
+function toneProps(tone: Tone) {
+  if (tone === 'head') return { bold: true }
+  if (tone === 'dim') return { dimColor: true }
+  if (tone === 'amber') return { color: '#e8a33d' }
+  if (tone === 'green') return { color: '#6bcb77' }
+  return {}
 }
 
 export const register: Register = on => {
@@ -59,6 +85,10 @@ export const register: Register = on => {
   })
 
   on('turn.step', async function* ($, e, next) {
+    if (e.agentId === undefined && e.turnId !== mainTurnId) {
+      mainTurnId = e.turnId
+      turnBase = claudeTotal(totals).all
+    }
     const r = yield* next(e)
     if (r && r.usage) {
       totals = addUsage(totals, r.usage)
@@ -83,9 +113,51 @@ export const register: Register = on => {
     return { deny: d.reason }
   })
 
-  on('command.run', { command: 'tokens' }, async ($) => {
+  on('ui.render', { component: 'Spinner' }, async ($, e, next) => {
+    const n = claudeTotal(totals).all - turnBase
+    return next({ ...e, props: { ...e.props, suffix: spinnerSuffix(n) } })
+  })
+
+  on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {
+    const { Box, Text } = $.ui.resolve(e)
+    const d = dotsFor(claudeTotal(totals).all)
+    const lines: Run[][] = [
+      pacFrame(frame, d),
+      [{ text: 'each dot = 100k Claude tokens', tone: 'dim' }],
+      [],
+      ...paneLines(totals, jobs),
+    ]
+    return (
+      <Box flexDirection="column">
+        {lines.map(line =>
+          line.length === 0 ? (
+            <Text> </Text>
+          ) : (
+            <Text wrap="truncate-end">
+              {line.map((r: Run) => (
+                <Text {...toneProps(r.tone)}>{r.text}</Text>
+              ))}
+            </Text>
+          ),
+        )}
+      </Box>
+    )
+  })
+
+  on('command.run', { command: 'tokens' }, async $ => {
     await scanLocal($)
     show($)
-    return { text: breakdownText(totals, jobs) }
+    await $.ui.open({ id: PANE, title: 'Tokens · this session' })
+    frame = 0
+    if (anim) anim.cancel()
+    anim = $.clock.every(120, () => {
+      frame += 1
+      $.ui.invalidate('ui.render')
+      if (frame >= dotsFor(claudeTotal(totals).all) && anim) {
+        anim.cancel()
+        anim = null
+      }
+    })
+    return { text: 'Opened the tokens pane.' }
   })
 }
