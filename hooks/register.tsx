@@ -1,4 +1,4 @@
-import type { Register, EngineInterface } from 'claude-code'
+import type { Register } from 'claude-code'
 import { createRain, stepRain, fitRain, renderRain, BAND_ROWS } from './rain'
 import type { Rain, Run, Tone } from './rain'
 
