@@ -1,6 +1,6 @@
 # claude-mods
 
-A Claude Code plugin marketplace for Claude Mods. Mods are built from function hooks and are GA in Claude Code v2.1.287 (on by default). Each mod is a folder; today there is one mod, `token-meter`. More mods will be added as folders.
+A Claude Code plugin marketplace for Claude Mods. Mods are built from function hooks and are GA in Claude Code v2.1.287 (on by default). Each mod is a folder: `token-meter` and `matrix-rain`. More mods will be added as folders.
 
 ## Install
 
@@ -9,7 +9,10 @@ Run these commands in Claude Code:
 ```
 /plugin marketplace add an80sPWNstar/claude-mods
 /plugin install token-meter@claude-mods
+/plugin install matrix-rain@claude-mods
 ```
+
+Install either one or both.
 
 Requires Claude Code 2.1.287 or newer. Built and tested in the terminal CLI (fullscreen layout, pane docked beside the transcript).
 
@@ -47,16 +50,27 @@ Constants at the top of `token-meter/hooks/tally.ts`: `CTX_WINDOW` (1000000), `C
 
 Reads: the env vars USERPROFILE / HOME (to find ~/.lanllm), files under ~/.lanllm/jobs/<session-id>/. Writes: only its own plugin store (session totals and the last context size, so a reload keeps the counts). No network, no processes.
 
+## matrix-rain
+
+Matrix digital rain in green katakana-style glyphs. Pure eye candy, no effect on Claude.
+
+- **`/matrix`** opens a docked rain pane (asks for 48 columns); `/matrix` again closes it.
+- **Band:** while Claude is working, a few rows of rain fall above the prompt and stop when the turn ends. On by default; `/matrix band` toggles it, and the choice is remembered across sessions.
+
+What it touches: only its own plugin store (the band on/off setting). No files, no network, no processes.
+
 ## Development
 
-The tests cover the pure functions in `token-meter/hooks/tally.ts`. From the repo root:
+The tests cover the pure functions (`token-meter/hooks/tally.ts`, `matrix-rain/hooks/rain.ts`). From the repo root:
 
 ```
 claude plugin validate token-meter
 claude plugin test token-meter
+claude plugin validate matrix-rain
+claude plugin test matrix-rain
 ```
 
-Type-check with `tsc -p token-meter` after Claude Code has loaded the mod once (it writes `.claude-plugin/types/`, which is git-ignored).
+Type-check with `tsc -p token-meter` (or `matrix-rain`) after Claude Code has loaded the mod once (it writes `.claude-plugin/types/`, which is git-ignored).
 
 ## License
 

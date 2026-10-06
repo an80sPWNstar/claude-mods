@@ -10,6 +10,13 @@
       "description": "This session's token use, Claude vs local LLMs: status line, live spinner count, and a /tokens pane with a Pac-Man context-window maze. Plus a Haiku-first subagent guard.",
       "category": "productivity",
       "tags": ["mods", "function-hooks", "tokens", "usage", "local-llm", "pacman"]
+    },
+    {
+      "name": "matrix-rain",
+      "source": "./matrix-rain",
+      "description": "Matrix digital rain: a /matrix pane, and a few rows above the prompt while Claude works. Pure eye candy.",
+      "category": "fun",
+      "tags": ["mods", "function-hooks", "matrix", "eye-candy"]
     }
   ]
 }
