@@ -1,0 +1,9 @@
+{
+  "name": "matrix-rain",
+  "version": "0.1.0",
+  "description": "Matrix digital rain: a /matrix pane, and a few rows above the prompt while Claude works. Pure eye candy.",
+  "author": { "name": "Bryan Henson", "url": "https://github.com/an80sPWNstar" },
+  "homepage": "https://github.com/an80sPWNstar/claude-mods",
+  "repository": "https://github.com/an80sPWNstar/claude-mods",
+  "license": "MIT"
+}
