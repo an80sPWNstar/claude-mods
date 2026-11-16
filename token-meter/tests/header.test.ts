@@ -1,18 +1,18 @@
 import { test, expect } from 'claude-code/testing'
 import { PAC_OPEN, PAC_SHUT, headerLines, scoreLine } from '../hooks/tally'
 
-test('PAC_OPEN and PAC_SHUT are 5 lines of 10 characters', () => {
-  expect(PAC_OPEN).toHaveLength(5)
-  expect(PAC_SHUT).toHaveLength(5)
-  for (const row of [...PAC_OPEN, ...PAC_SHUT]) expect(row).toHaveLength(10)
+test('PAC_OPEN and PAC_SHUT are 4 lines of 8 characters', () => {
+  expect(PAC_OPEN).toHaveLength(4)
+  expect(PAC_SHUT).toHaveLength(4)
+  for (const row of [...PAC_OPEN, ...PAC_SHUT]) expect(row).toHaveLength(8)
 })
 
-test('headerLines idle: open frame, score beside the middle line', () => {
+test('headerLines idle: open frame, score beside the second line', () => {
   const lines = headerLines(1234, 0, 0)
-  expect(lines).toHaveLength(5)
+  expect(lines).toHaveLength(4)
   expect(lines[0]).toEqual([{ text: PAC_OPEN[0], tone: 'pac' }])
-  expect(lines[2]).toEqual([
-    { text: PAC_OPEN[2], tone: 'pac' },
+  expect(lines[1]).toEqual([
+    { text: PAC_OPEN[1], tone: 'pac' },
     { text: '   ', tone: 'plain' },
     ...scoreLine(1234),
   ])

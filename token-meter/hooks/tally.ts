@@ -44,7 +44,7 @@ export function stepToward(shown: number, target: number): number {
 // (even rows left to right, odd rows right to left).
 // s = Math.max(0, Math.min(CTX_DOTS, shown)); p = Math.min(s, CTX_DOTS - 1)  (the eater's cell)
 // For row r (0..ROWS-1) and column j (0..ROW-1): idx = r * ROW + (r % 2 === 0 ? j : ROW - 1 - j)
-//   idx === p -> { text: ' ●', tone: 'pac' }   (the eater is a solid dot in both directions; '●' is U+25CF)
+//   idx === p -> { text: ' ⬤', tone: 'pac' }   (the eater is a large solid dot in both directions; '⬤' is U+2B24)
 //   idx < s   -> { text: '  ', tone: 'plain' }
 //   otherwise -> { text: ' •', tone: 'pellet' }   ('•' is U+2022)
 // Each line is its cells left to right, with ADJACENT RUNS OF THE SAME TONE MERGED into one run (texts concatenated).
@@ -58,7 +58,7 @@ export function ctxMaze(shown: number, eaten: number, owed: number): Run[][] {
       const idx = r * ROW + (r % 2 === 0 ? j : ROW - 1 - j)
       let run: Run
       if (idx === p) {
-        run = { text: ' \u25cf', tone: 'pac' }
+        run = { text: ' \u2b24', tone: 'pac' }
       } else if (idx < s) {
         run = { text: '  ', tone: 'plain' }
       } else {
@@ -299,31 +299,29 @@ export function scoreLine(fresh: number): Run[] {
   ]
 }
 
-// 10x10-pixel Pac-Man in half blocks (each cell = 2 stacked pixels), facing right.
+// 8x8-pixel Pac-Man in half blocks (each cell = 2 stacked pixels), facing right.
 // Open: the head tips back, so the eye sits one pixel higher than when shut.
 export const PAC_OPEN = [
-  ' ▄▄████▄▄ ',
-  '▄████▄▀▀  ',
-  '████      ',
-  '▀█████▄▄  ',
-  ' ▀▀████▀▀ ',
+  ' ▄██▀█▄ ',
+  '███▀▀   ',
+  '███▄▄   ',
+  ' ▀████▀ ',
 ]
 // Shut: a full disc, the eye one pixel lower, and the mouth as a dark line.
 export const PAC_SHUT = [
-  ' ▄▄████▄▄ ',
-  '▄████▀███▄',
-  '█████▀▀▀▀▀',
-  '▀████████▀',
-  ' ▀▀████▀▀ ',
+  ' ▄████▄ ',
+  '████▄███',
+  '████▄▄▄▄',
+  ' ▀████▀ ',
 ]
 
-// Header: the big Pac-Man (5 lines) with the score beside its middle line.
+// Header: the big Pac-Man (4 lines) with the score beside its second line.
 // Shut while chomping on an even step (moving && eaten % 2 === 0), else open.
 export function headerLines(fresh: number, eaten: number, owed: number): Run[][] {
   const frame = owed > eaten && eaten % 2 === 0 ? PAC_SHUT : PAC_OPEN
   return frame.map((row, i) => {
     const line: Run[] = [{ text: row, tone: 'pac' }]
-    if (i === 2) line.push({ text: '   ', tone: 'plain' }, ...scoreLine(fresh))
+    if (i === 1) line.push({ text: '   ', tone: 'plain' }, ...scoreLine(fresh))
     return line
   })
 }
