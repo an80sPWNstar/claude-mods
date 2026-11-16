@@ -87,7 +87,7 @@ export const register: Register = on => {
     const savedCtx = await $.store.get('ctx:' + sid)
     if (typeof savedCtx === 'number') ctx = savedCtx
     shown = ctxTarget(ctx)
-    await $.command.register({ name: 'tokens', description: 'Token use this session: Claude per model, local per box' })
+    await $.command.register({ name: 'tokens', description: 'Token use this session: Claude per model, local per box (run again to close)' })
     await scanLocal($)
     show($)
     $.clock.every(20000, async () => {
@@ -179,6 +179,10 @@ export const register: Register = on => {
   })
 
   on('command.run', { command: 'tokens' }, async $ => {
+    if ((await $.ui.panes()).some(p => p.id === PANE)) {
+      await $.ui.close({ id: PANE })
+      return { text: 'Closed the tokens pane.' }
+    }
     await scanLocal($)
     show($)
     await $.ui.open({ id: PANE, title: 'Tokens · this session', columns: 56 })
