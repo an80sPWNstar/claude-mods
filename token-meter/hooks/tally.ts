@@ -156,8 +156,10 @@ export function formatCount(n: number): string {
   return (n / 1_000_000).toFixed(2) + 'M'
 }
 
-export function statusLine(claude: { all: number; cached: number }, local: { all: number }): string {
-  return `Claude ${formatCount(claude.all)} (${formatCount(claude.cached)} cached) · Local ${formatCount(local.all)}`
+// Status line: this session's context in use, the latest main-thread request's
+// input + cache write + cache read (the figure Claude Code shows). Nothing else.
+export function statusLine(ctx: number): string {
+  return formatCount(ctx) + ' tok'
 }
 
 export function spawnDecision(s: SpawnInfo, confirmed: ReadonlySet<string>): SpawnDecision {

@@ -4,7 +4,6 @@ import {
   addUsage,
   claudeTotal,
   parseJob,
-  localTotal,
   statusLine,
   spawnDecision,
   paneLines,
@@ -56,7 +55,7 @@ async function scanLocal($: EngineInterface) {
 }
 
 function show($: EngineInterface) {
-  $.ui.status(statusLine(claudeTotal(totals), localTotal(jobs)))
+  $.ui.status(statusLine(ctx))
   $.ui.invalidate('ui.render')
 }
 
@@ -120,8 +119,9 @@ export const register: Register = on => {
     const r = yield* next(e)
     if (r && r.usage) {
       totals = addUsage(totals, r.usage)
-      if (e.agentId === undefined) {
-        ctx = contextSize(r.usage)
+      const c = contextSize(r.usage)
+      if (e.agentId === undefined && c > 0) {
+        ctx = c
         await $.store.set('ctx:' + sid, ctx)
       }
       show($)

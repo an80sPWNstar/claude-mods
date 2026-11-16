@@ -52,7 +52,9 @@ test('localTotal', () => {
 })
 
 test('statusLine', () => {
-  expect(statusLine({ all: 2412345, cached: 2300000 }, { all: 38240 })).toBe('Claude 2.41M (2.30M cached) · Local 38.2k')
+  expect(statusLine(0)).toBe('0 tok')
+  expect(statusLine(120379)).toBe('120.4k tok')
+  expect(statusLine(1080000)).toBe('1.08M tok')
 })
 
 test('spawnDecision rewrite when model undefined', () => {

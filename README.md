@@ -22,7 +22,7 @@ Shows how many tokens THIS session has used, Claude and local LLMs side by side,
 
 ![The /tokens pane: SCORE, the Pac-Man context maze, and the per-model and per-box tables](docs/token-meter-pane.png)
 
-1. **Status line:** `Claude 22.51M (22.19M cached) · Local 261.7k`. Claude = input + output + cache read + cache write for every model step in the session. The number in parentheses is the cache-read part.
+1. **Status line:** `120.4k tok`. This session's context in use: the latest main-thread request's input + cache write + cache read, the same figure Claude Code shows. It drops after a compaction. Nothing else is on the status line.
 2. **Spinner:** while Claude works, the spinner line ends with `… · Claude +18.4k this turn` (tokens since your last message).
 3. **`/tokens` pane:**
    - `SCORE 315,335`: fresh tokens this session (input + output + cache write; cache reads not counted).
