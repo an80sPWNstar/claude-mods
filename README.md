@@ -26,7 +26,8 @@ Shows how many tokens THIS session has used, Claude and local LLMs side by side,
 2. **Spinner:** while Claude works, the spinner line ends with `… · Claude +18.4k this turn` (tokens since your last message).
 3. **`/tokens` pane:**
    - `SCORE 315,335`: fresh tokens this session (input + output + cache write; cache reads not counted).
-   - A Pac-Man maze: 200 peach dots in 10 rows of 20, one dot per 5k tokens of a 1M context window. Pac-Man's position is how full the context is right now (size of the latest main-thread request). He snakes left to right, then right to left, eats his way forward as the context grows, chomps while fresh tokens are flowing, and the board refills when the conversation is compacted. Below it: `1 dot = 5k context · 174.8k of 1M`.
+   - A big yellow pixel Pac-Man beside the SCORE, drawn in half blocks. He chomps while fresh tokens are flowing: his mouth closes to a dark line and his head dips a pixel.
+   - A context maze: 200 peach dots in 10 rows of 20, one dot per 5k tokens of a 1M context window. The yellow `●` eater's position is how full the context is right now (size of the latest main-thread request). It snakes left to right, then right to left, eats its way forward as the context grows, and the board refills when the conversation is compacted. Below it: `1 dot = 5k context · 174.8k of 1M`.
    - A table per Claude model (requests, input, cache write, cache read, output) and per local box (jobs, total), then a Total line `Claude 22.51M · Local 261.7k`. Below 54 columns of pane width the table switches to narrower columns.
 
 ### Local models

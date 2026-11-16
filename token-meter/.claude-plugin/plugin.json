@@ -1,6 +1,6 @@
 {
   "name": "token-meter",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "This session's token use: status line shows the context in use (as Claude Code counts it), live spinner count, and a /tokens pane with a Pac-Man context-window maze, Claude vs local LLMs. Plus a Haiku-first subagent guard.",
   "author": { "name": "Bryan Henson", "url": "https://github.com/an80sPWNstar" },
   "homepage": "https://github.com/an80sPWNstar/claude-mods",

@@ -43,17 +43,14 @@ export function stepToward(shown: number, target: number): number {
 // The maze: ROWS lines of ROW cells, two characters per cell, walked as a snake
 // (even rows left to right, odd rows right to left).
 // s = Math.max(0, Math.min(CTX_DOTS, shown)); p = Math.min(s, CTX_DOTS - 1)  (the eater's cell)
-// moving = owed > eaten
 // For row r (0..ROWS-1) and column j (0..ROW-1): idx = r * ROW + (r % 2 === 0 ? j : ROW - 1 - j)
-//   idx === p -> { text: ' ' + mouth, tone: 'pac' }
-//                mouth = moving && eaten % 2 === 0 ? 'O' : (r % 2 === 0 ? 'C' : 'Ɔ')   ('Ɔ' is U+0186)
+//   idx === p -> { text: ' ●', tone: 'pac' }   (the eater is a solid dot in both directions; '●' is U+25CF)
 //   idx < s   -> { text: '  ', tone: 'plain' }
 //   otherwise -> { text: ' •', tone: 'pellet' }   ('•' is U+2022)
 // Each line is its cells left to right, with ADJACENT RUNS OF THE SAME TONE MERGED into one run (texts concatenated).
 export function ctxMaze(shown: number, eaten: number, owed: number): Run[][] {
   const s = Math.max(0, Math.min(CTX_DOTS, shown))
   const p = Math.min(s, CTX_DOTS - 1)
-  const moving = owed > eaten
   const rows: Run[][] = []
   for (let r = 0; r < ROWS; r++) {
     const cells: Run[] = []
@@ -61,8 +58,7 @@ export function ctxMaze(shown: number, eaten: number, owed: number): Run[][] {
       const idx = r * ROW + (r % 2 === 0 ? j : ROW - 1 - j)
       let run: Run
       if (idx === p) {
-        const mouth = moving && eaten % 2 === 0 ? 'O' : (r % 2 === 0 ? 'C' : '\u0186')
-        run = { text: ' ' + mouth, tone: 'pac' }
+        run = { text: ' \u25cf', tone: 'pac' }
       } else if (idx < s) {
         run = { text: '  ', tone: 'plain' }
       } else {
@@ -301,4 +297,33 @@ export function scoreLine(fresh: number): Run[] {
     { text: 'SCORE ', tone: 'head' },
     { text: grouped, tone: 'amber' },
   ]
+}
+
+// 10x10-pixel Pac-Man in half blocks (each cell = 2 stacked pixels), facing right.
+// Open: the head tips back, so the eye sits one pixel higher than when shut.
+export const PAC_OPEN = [
+  ' ▄▄████▄▄ ',
+  '▄████▄▀▀  ',
+  '████      ',
+  '▀█████▄▄  ',
+  ' ▀▀████▀▀ ',
+]
+// Shut: a full disc, the eye one pixel lower, and the mouth as a dark line.
+export const PAC_SHUT = [
+  ' ▄▄████▄▄ ',
+  '▄████▀███▄',
+  '█████▀▀▀▀▀',
+  '▀████████▀',
+  ' ▀▀████▀▀ ',
+]
+
+// Header: the big Pac-Man (5 lines) with the score beside its middle line.
+// Shut while chomping on an even step (moving && eaten % 2 === 0), else open.
+export function headerLines(fresh: number, eaten: number, owed: number): Run[][] {
+  const frame = owed > eaten && eaten % 2 === 0 ? PAC_SHUT : PAC_OPEN
+  return frame.map((row, i) => {
+    const line: Run[] = [{ text: row, tone: 'pac' }]
+    if (i === 2) line.push({ text: '   ', tone: 'plain' }, ...scoreLine(fresh))
+    return line
+  })
 }

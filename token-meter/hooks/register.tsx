@@ -16,7 +16,7 @@ import {
   stepToward,
   ctxMaze,
   ctxLabel,
-  scoreLine,
+  headerLines,
 } from './tally'
 import type { Totals, LocalJob, Run, Tone } from './tally'
 
@@ -155,7 +155,8 @@ export const register: Register = on => {
     const fresh = freshTotal(totals)
     const cols = e.props.bodyColumns
     const lines: Run[][] = [
-      scoreLine(fresh),
+      ...headerLines(fresh, eaten, dotsOwed(fresh)),
+      [],
       ...ctxMaze(shown, eaten, dotsOwed(fresh)),
       [{ text: ctxLabel(ctx), tone: 'dim' }],
       [],
